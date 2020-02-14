@@ -104,6 +104,7 @@ function parseBuffer(socket, buf) {
  * @param {number} type 
  */
 function authenticate(s, type) {
+    return true
     if (s.pid == 0) {
         return type == Session.protocolType.authentication || type == Session.protocolType.heartBeat
     }
