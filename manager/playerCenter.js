@@ -1,8 +1,19 @@
+"use strict";
 const authUrl = require("../config").userCenterUrl;
 const axios = require("axios").default
 const mysql = require("../mysql/mysql");
 const Player = require("../class").Player;
+const lobbyCenter = require("./lobbyCenter");
+/**
+ * @type {Object<string,Player>}
+ */
 const onlinePlayer = {};
+
+function init() {
+    return new Promise(reslove => {
+        reslove();
+    })
+}
 
 /**
  * 登入
@@ -22,8 +33,19 @@ async function authenticate(account, password) {
         }
     });
     let p = null;
-    if (result[0] != null) p = addPlayer(result[0]);
+    if (result[0] != null) {
+        p = addPlayer(result[0]);
+        lobbyCenter.inLobby(p.aid)
+    }
     return p;
+}
+
+/**
+ * 取得在線上的玩家
+ * @param {number} id 
+ */
+function getOnlinePlayer(id) {
+    return onlinePlayer[id];
 }
 
 /**
@@ -44,10 +66,26 @@ function addPlayer(data) {
 
 /**
  * 移除玩家資料
- * @param {number} aid 
+ * @param {number} id 
  */
-function removePlayer(aid) {
-    delete onlinePlayer[aid];
+function removePlayer(id) {
+    delete onlinePlayer[id];
 }
 
+/**
+ * 
+ * @param {number} id 
+ */
+async function getPlayerById(id) {
+    let p = onlinePlayer[id];
+    if (p == null) {
+        p = await mysql.modules['player'].findOne({ where: { aid: id } })
+    }
+    return p;
+}
+
+module.exports.getOnlinePlayer = getOnlinePlayer
+module.exports.init = init;
 module.exports.authenticate = authenticate;
+module.exports.getPlayerById = getPlayerById;
+module.exports.removePlayer = removePlayer;

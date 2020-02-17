@@ -1,3 +1,4 @@
+"use strict";
 function init() {
     return new Promise((resolve, reject) => {
         console.log("sever初始化");
@@ -17,6 +18,16 @@ function test(session,a, b, c) {
     return "回傳喔";
 }
 
+
+/**
+ * 斷線時
+ * @param {Session} s
+ */
+function onClose(s) {
+
+}
+
+module.exports.onClose = onClose;
 module.exports.init = init;
 module.exports.rpc = {
     test

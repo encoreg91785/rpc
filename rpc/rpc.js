@@ -51,8 +51,15 @@ function parseBuffer(socket, buf) {
              * @type {protocolAuthenticate}
              */
             let reqAuth = JSON.parse(Buffer.from(data.buf).toString("utf8"))
-            let player = playerCenter.authenticate(reqAuth.account, reqAuth.password);
-            s.sendRespond(reqAuth.id, player);
+            let playerP = playerCenter.authenticate(reqAuth.account, reqAuth.password);
+            playerP.then(player => {
+                //重複登入
+                let oldS = getSessionByPid(player.aid);
+                oldS && oldS.socket.destroy();
+                //登入
+                s.pid = player.aid;
+                s.sendRespond(reqAuth.id, player);
+            })
             break;
         case Session.protocolType.request:
             /**
@@ -141,6 +148,16 @@ function getSessionById(id) {
 }
 
 /**
+ * id取得Session
+ * @param {number} id 
+ */
+function getSessionByPid(id) {
+    let s = Object.values(allSession).find(e => e.pid == id);
+    if (s == null) console.log("此PID不存在" + id)
+    return s;
+}
+
+/**
  * 初始化Manager
  */
 function initAllServerRPC() {
@@ -159,11 +176,24 @@ function initAllServerRPC() {
     return Promise.all(lsP);
 }
 
+/**
+ * 斷線時
+ * @param {Socket} socket 
+ */
+function onClose(socket) {
+    let s = allSession[socket.id];
+    delete allSession[s.id];
+    Object.values(serversRPC).forEach(e => {
+        e['onClose'] && e['onClose'](s);
+    })
+}
+
 module.exports.init = init;
 module.exports.parseBuffer = parseBuffer;
 module.exports.getSessionById = getSessionById;
 module.exports.genSession = genSession;
 module.exports.removeSession = removeSession;
+module.exports.onClose = onClose;
 
 /**
  * @typedef {import("net").Socket} Socket

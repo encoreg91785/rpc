@@ -1,5 +1,21 @@
 "use strict";
 module.exports = class Player {
+    static get status() {
+        return {
+            /**
+             * 無狀態
+             */
+            none: 0,
+            /**
+             * 在大廳內
+             */
+            lobby: 1,
+            /**
+             * 遊戲內
+             */
+            game: 2,
+        }
+    }
     /**
      * 
      * @param {object} data
@@ -35,5 +51,9 @@ module.exports = class Player {
          * 頭像
          */
         this.photo = data.photo;
+        /**
+         * 狀態
+         */
+        this.status = 0;
     }
 }

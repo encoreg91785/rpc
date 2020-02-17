@@ -39,6 +39,7 @@ function loadManager() {
  * @param {Socket} socket 
  */
 function onConnect(socket) {
+    socket.setTimeout(1000 * 6);
     rpc.genSession(socket)
     //連線中斷時
     socket.on('end', () => {
@@ -46,6 +47,7 @@ function onConnect(socket) {
     });
     //關閉socket
     socket.on("close", (isError) => {
+        rpc.onClose(socket);
         console.log("close");
     });
     //錯誤時
@@ -54,12 +56,17 @@ function onConnect(socket) {
     });
     //長時間未回應
     socket.on('timeout', function () {
-        socket.destroy();
+        console.log("TIME OUT")
+        socket.end(Buffer.from("123"));
     });
 
     socket.on('drain', function () {
+        console.log(socket.id + " resume")
         socket.resume();
     });
 }
 
+/**
+ * @typedef {import('net').Socket} Socket
+ */
 

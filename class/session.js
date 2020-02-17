@@ -109,9 +109,8 @@ module.exports = class Session {
     socketWrite(buf) {
         let sendBuf = StickPackage.setSendData(buf)
         var isKernelBufferFull = this.socket.write(sendBuf);
-        if (isKernelBufferFull) {
-            console.log('Data was flushed successfully from kernel buffer i.e written successfully!');
-        } else {
+        if (isKernelBufferFull == false) {
+            console.log(this.socket.id + " pause")
             this.socket.pause();
         }
     }
