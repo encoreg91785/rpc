@@ -5,7 +5,7 @@
 const Session = require('../class').Session
 const utility = require('../utility');
 const playerCenter = require('../manager/playerCenter');
-
+const listenCenter = require('../manager/listenCenter');
 var serversRPC = {};
 /**
  * 所有Session
@@ -95,6 +95,19 @@ function parseBuffer(socket, buf) {
                 let func = s.rpcCallBack[resData.id]
                 func && func(resData.data);
             }
+            break;
+        case Session.protocolType.listen:
+            /**
+             * @type {prototcolListen}
+             */
+            let lisData = JSON.parse(Buffer.from(data.buf).toString("utf8"));
+            if (lisData.add) {
+                listenCenter.addListen(lisData.className, lisData.classId, s.id)
+            }
+            else {
+                listenCenter.addListen(lisData.className, lisData.classId, s.id)
+            }
+            if (lisData.idid != 0) s.sendRespond(id);
             break;
         case Session.protocolType.heartBeat:
             s.sendHeartBeat();
@@ -217,6 +230,14 @@ module.exports.onClose = onClose;
 * @typedef prototcolRespond
 * @property {number} id
 * @property {*} data
+*/
+
+/**
+* @typedef prototcolListen
+* @property {number} id
+* @property {number} classId
+* @property {string} className
+* @property {boolean} add
 */
 
 /**

@@ -70,3 +70,6 @@ function onConnect(socket) {
  * @typedef {import('net').Socket} Socket
  */
 
+/**
+ * @typedef {import('./class').Session} Session
+ */

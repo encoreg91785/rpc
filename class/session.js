@@ -20,6 +20,14 @@ module.exports = class Session {
              * 回應
              */
             respond: 3,
+            /**
+             * 註冊或註銷監聽
+             */
+            listen: 4,
+            /**
+             * 同步Class
+             */
+            sync: 5,
         };
     }
     /**
@@ -113,6 +121,19 @@ module.exports = class Session {
             console.log(this.socket.id + " pause")
             this.socket.pause();
         }
+    }
+
+    /**
+     * 傳送同步資料
+     * @param {string} className 
+     * @param {number} classId 
+     * @param {*} data 
+     */
+    sendSyncClass(className, classId, data) {
+        let sc = { type: Session.protocolType.sync, className, classId, data }
+        let scStr = JSON.stringify(sc);
+        let scBuf = Buffer.from(scStr, "utf8");
+        this.socketWrite(scBuf);
     }
 }
 

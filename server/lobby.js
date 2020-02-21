@@ -1,7 +1,6 @@
 "use strict";
 const lobbyCenter = require('../manager/lobbyCenter');
 const playerCenter = require('../manager/playerCenter');
-const Player = require("../class").Player;
 function init() {
     return new Promise((resolve, reject) => {
         console.log("sever初始化");
@@ -14,7 +13,7 @@ function init() {
  * @param {Session} session 
  */
 function inLobby(session) {
-    let idList = lobbyCenter.getLobbyAllId()
+    let idList = lobbyCenter.getLobbyAllRoomId()
     lobbyCenter.inLobby(session.pid);
     return idList;
 }
@@ -58,6 +57,7 @@ module.exports.init = init;
 module.exports.rpc = {
     inLobby,
     getRoomById,
+    joinRoom,
 }
 
 /**

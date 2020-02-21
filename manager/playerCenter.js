@@ -5,9 +5,16 @@ const mysql = require("../mysql/mysql");
 const Player = require("../class").Player;
 const lobbyCenter = require("./lobbyCenter");
 /**
+ * 在線玩家
  * @type {Object<string,Player>}
  */
 const onlinePlayer = {};
+
+/**
+ * 遊戲中離線玩家
+ * @type {Object<string,Player>}
+ */
+const offlineInGamePlayer = {};
 
 function init() {
     return new Promise(reslove => {
@@ -34,7 +41,9 @@ async function authenticate(account, password) {
     });
     let p = null;
     if (result[0] != null) {
-        p = addPlayer(result[0]);
+        p = offlineInGamePlayer[result[0].aid];
+        if (p == null) p = addPlayer(result[0]);
+        else onlinePlayer[p.aid] = p;
         lobbyCenter.inLobby(p.aid)
     }
     return p;
@@ -60,7 +69,7 @@ function getOnlinePlayer(id) {
  */
 function addPlayer(data) {
     let p = new Player(data);
-    onlinePlayer[data.aid]
+    onlinePlayer[data.aid] = p;
     return p;
 }
 
@@ -69,6 +78,8 @@ function addPlayer(data) {
  * @param {number} id 
  */
 function removePlayer(id) {
+    let p = onlinePlayer[id];
+    if (p != null && p.status == Player.status.game) offlineInGamePlayer[p.aid] = p;
     delete onlinePlayer[id];
 }
 

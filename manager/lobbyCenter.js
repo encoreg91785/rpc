@@ -50,11 +50,19 @@ function getRoomById(id) {
 /**
  * 取得所有在大廳的PlayerID
  */
-function getLobbyAllId() {
+function getLobbyAllPlayerId() {
     return Object.keys(inLobbyPlayerId);
 }
 
-module.exports.getLobbyAllId = getLobbyAllId;
+/**
+ * 取得所有在大廳的RoomID
+ */
+function getLobbyAllRoomId() {
+    return Object.keys(allRoom);
+}
+
+module.exports.getLobbyAllRoomId = getLobbyAllRoomId;
+module.exports.getLobbyAllPlayerId = getLobbyAllPlayerId;
 module.exports.getRoomById = getRoomById;
 module.exports.creatRoom = creatRoom;
 module.exports.inLobby = inLobby;
