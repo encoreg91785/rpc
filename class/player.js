@@ -1,19 +1,24 @@
 "use strict";
 module.exports = class Player {
+    //设定玩家状态
     static get status() {
         return {
             /**
-             * 無狀態
+             * 离线
              */
-            none: 0,
+            offline: 0,
             /**
              * 在大廳內
              */
             lobby: 1,
             /**
-             * 遊戲內
+             * 房间內
              */
-            game: 2,
+            room: 2,
+            /**
+             * 游戏內
+             */
+            game: 3,
         }
     }
     /**
@@ -30,7 +35,7 @@ module.exports = class Player {
         /**
          * 玩家編號
          */
-        this.aid = data.aid;
+        this.id = data.aid;
         /**
          * 玩家名稱
          */

@@ -4,17 +4,13 @@ module.exports = class Room {
     static get status() {
         return {
             /**
-             * 無狀態
-             */
-            none: 0,
-            /**
              * 準備中
              */
-            ready: 1,
+            ready: 0,
             /**
              * 遊戲中
              */
-            game: 2,
+            game: 1,
         }
     }
     static get maxPlayer() {
@@ -24,9 +20,9 @@ module.exports = class Room {
      * 
      * @param {string} roomName 房間名
      * @param {number} max 玩家人數限制 2~4
-     * @param {string} lock 密碼 ""
+     * @param {string} password 密碼 ""
      */
-    constructor(roomName, max, lock = "") {
+    constructor(roomName, max, password = "") {
         id++;
         /**
          * 房間編號
@@ -48,7 +44,7 @@ module.exports = class Room {
         /**
          * 密碼
          */
-        this.lock = lock;
+        this.password = password;
         /**
          * 狀態
          */

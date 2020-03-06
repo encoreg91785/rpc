@@ -110,7 +110,7 @@ class StickPackage {
                 }
                 else {
                     //拚黏完成
-                    this.onCompleteCallBack(this.socket, buf.slice(4, total));
+                    this.onCompleteCallBack(this.socket, buf.slice(4,total));
                     if (total < buf.length) this.stick(buf.slice(total));
                 }
             }

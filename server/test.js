@@ -13,11 +13,22 @@ function init() {
  * @param {*} b 
  * @param {*} c 
  */
-function test(session,a, b, c) {
+function test(session, a, b, c) {
     console.log(a, b, c);
     return "回傳喔";
 }
 
+/**
+ * 測試用
+ * @param {Session} session 
+ * @param {*} a 
+ * @param {*} b 
+ * @param {*} c 
+ */
+function testA(session, a, b, c, d) {
+    console.log(a, b, c, d);
+    return { a, b, c, d };
+}
 
 /**
  * 斷線時
@@ -30,7 +41,8 @@ function onClose(s) {
 module.exports.onClose = onClose;
 module.exports.init = init;
 module.exports.rpc = {
-    test
+    test,
+    testA
 }
 
 /**

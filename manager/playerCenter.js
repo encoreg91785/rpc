@@ -4,6 +4,7 @@ const axios = require("axios").default
 const mysql = require("../mysql/mysql");
 const Player = require("../class").Player;
 const lobbyCenter = require("./lobbyCenter");
+const listenCenter = require("./listenCenter");
 /**
  * 在線玩家
  * @type {Object<string,Player>}
@@ -11,7 +12,7 @@ const lobbyCenter = require("./lobbyCenter");
 const onlinePlayer = {};
 
 /**
- * 遊戲中離線玩家
+ * 離線玩家
  * @type {Object<string,Player>}
  */
 const offlineInGamePlayer = {};
@@ -28,25 +29,36 @@ function init() {
  * @param {string} password 
  */
 async function authenticate(account, password) {
-    let data = await axios.post(authUrl + "login", { account, password });
-    if (data.data.result != "success") return null;
-    let ac = data.data.data.account;
-    let result = await mysql.modules['player'].findOrCreate({
-        where: { aid: ac.id },
-        defaults: {
-            aid: ac.id,
-            name: ac.name,
-            gender: ac.sex,
+    try {
+        let data = await axios.post(authUrl + "login", { account, password });
+        if (data.data.result != "success") return null;
+        let ac = data.data.data.account;
+        let result = await mysql.modules['player'].findOrCreate({
+            where: { aid: ac.id },
+            defaults: {
+                aid: ac.id,
+                name: ac.name,
+                gender: ac.sex,
+            }
+        });
+        let p = null;
+        if (result[0] != null) {
+            p = offlineInGamePlayer[result[0].aid];
+            if (p == null) p = addPlayer(result[0]);
+            else {
+                onlinePlayer[p.id] = p;
+                p.status = Player.status.game;
+                listenCenter.triggerByClass(p);
+            }
+            lobbyCenter.inLobby(p.id)
         }
-    });
-    let p = null;
-    if (result[0] != null) {
-        p = offlineInGamePlayer[result[0].aid];
-        if (p == null) p = addPlayer(result[0]);
-        else onlinePlayer[p.aid] = p;
-        lobbyCenter.inLobby(p.aid)
+        return p;
     }
-    return p;
+    catch (e) {
+        console.log(e);
+        return null;
+    }
+
 }
 
 /**
@@ -70,6 +82,7 @@ function getOnlinePlayer(id) {
 function addPlayer(data) {
     let p = new Player(data);
     onlinePlayer[data.aid] = p;
+    listenCenter.triggerByClass(p);
     return p;
 }
 
@@ -79,7 +92,11 @@ function addPlayer(data) {
  */
 function removePlayer(id) {
     let p = onlinePlayer[id];
-    if (p != null && p.status == Player.status.game) offlineInGamePlayer[p.aid] = p;
+    if (p != null && p.status == Player.status.game) {
+        offlineInGamePlayer[p.aid] = p;
+    }
+    p.status = Player.status.offline;
+    listenCenter.triggerByClass(p);
     delete onlinePlayer[id];
 }
 

@@ -1,6 +1,7 @@
 "use strict";
 const lobbyCenter = require('../manager/lobbyCenter');
 const playerCenter = require('../manager/playerCenter');
+
 function init() {
     return new Promise((resolve, reject) => {
         console.log("sever初始化");
@@ -28,14 +29,26 @@ function getRoomById(session, id) {
 }
 
 /**
+ * 
+ * @param {Session} session 
+ * @param {string} roomName
+ * @param {number} max
+ * @param {string} password 
+ */
+function createRoom(session, roomName, max, password) {
+    var r = lobbyCenter.creatRoom(roomName, max, password);
+    return r;
+}
+
+/**
  * 進入房間
  * @param {Session} session 
  * @param {number} id 
- * @param {string} lock 
+ * @param {string} password 
  */
-function joinRoom(session, id, lock) {
+function joinRoom(session, id, password) {
     let r = lobbyCenter.getRoomById(id);
-    if (r != null && r.playerList.length < r.max && r.lock == lock) {
+    if (r != null && r.playerList.length < r.max && r.password == password) {
         r.playerList.push(session.pid);
         return true;
     }
@@ -58,6 +71,7 @@ module.exports.rpc = {
     inLobby,
     getRoomById,
     joinRoom,
+    test
 }
 
 /**

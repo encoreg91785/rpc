@@ -13,11 +13,11 @@ const allRoom = {};
  * 創房間
  * @param {string} roomName 房間名
  * @param {number} max 最大人數 2~4
- * @param {string} lock 密碼
+ * @param {string} password 密碼
  */
-function creatRoom(roomName, max, lock = "") {
+function creatRoom(roomName, max, password = "") {
     max = max > 4 ? 4 : (max < 2 ? 2 : max);
-    let r = new Room(roomName, max, lock)
+    let r = new Room(roomName, max, password)
     allRoom[r.id] = r;
     return r;
 }

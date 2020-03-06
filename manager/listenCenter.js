@@ -57,12 +57,13 @@ function addListen(className, classId, id) {
 }
 
 /**
- * 觸發
+ * 觸發 丢入Object
  * @param {string} className 
  * @param {number} classId 
  * @param {*} data 
  */
-function trigger(className, classId, data) {
+function triggerByObject(className, classId, data) {
+    if (className.split('.').length == 1) className = "RPCClass." + className;
     let objLs = listenList[className];
     if (objLs == null) {
         objLs = {};
@@ -73,14 +74,35 @@ function trigger(className, classId, data) {
         ls = []
         objLs[classId] = ls
     }
+    var nullLs = [];
     for (let index = 0; index < ls.length; index++) {
         let id = ls[index];
         let s = rpc.getSessionById(id);
-        s.sendSyncClass(className, classId, data);
+        if (s == null) nullLs.push(id);
+        s && s.sendSyncClass(className, data);
     }
+    //移除不存在的Session ID
+    for (let index = 0; index < nullLs.length; index++) {
+        let id = nullLs[index];
+        utility.removeElement(ls,id);
+    }
+}
+
+/**
+ * 觸發丢入class
+ * @param {*} classData 
+ */
+function triggerByClass(classData) {
+    let className = "RPCClass." + classData.constructor.name;
+    let classId = classData.id;
+    if (className == "Object" || classId == null) {
+        console.log("className is error : " + className + "| classId is error: " + classId);
+    }
+    else triggerByObject(className, classId, classData);
 }
 
 module.exports.addListen = addListen;
 module.exports.removeListen = removeListen;
-module.exports.trigger = trigger;
+module.exports.triggerByObject = triggerByObject;
+module.exports.triggerByClass = triggerByClass;
 module.exports.init = init;

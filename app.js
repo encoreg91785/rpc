@@ -8,7 +8,6 @@ const config = require("./config");
 const utility = require('./utility');
 
 init();
-
 async function init() {
     await mysql.connect(config.db, defindTable);
     await loadManager();
@@ -39,8 +38,20 @@ function loadManager() {
  * @param {Socket} socket 
  */
 function onConnect(socket) {
-    socket.setTimeout(1000 * 6);
-    rpc.genSession(socket)
+    //socket.setTimeout(1000 * 6);
+    let s = rpc.genSession(socket)
+    // s.sendReqest("Test", "TestOne", null, true).then(r => {
+    //     console.log(r);
+    // });
+    // s.sendReqest("Test", "TestTwo", ["SERVER","999",false], true).then(r => {
+    //     console.log(r);
+    // });
+    // s.sendReqest("TestT", "Test", [], true).then(r => {
+    //     console.log(r);
+    // });
+    // s.sendReqest("TestT", "TestA", [], true).then(r => {
+    //     console.log(r);
+    // });
     //連線中斷時
     socket.on('end', () => {
         console.log("end");

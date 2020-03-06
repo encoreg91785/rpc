@@ -30,34 +30,41 @@ function parseBuffer(socket, buf) {
      */
     let data = null;
     try {
-        let jsonStr = buf.toString("utf8")
+        let jsonStr = Buffer.from(buf, 'base64').toString("utf8");
         data = JSON.parse(jsonStr);
     }
     catch (e) {
         console.log("data 解析失敗: " + buf)
         console.log("data 解析失敗: " + buf.toString("utf8"))
+        // let ls =splitJsonString(buf.toString("utf8"))
+        // ls.forEach(e=>{
+        //     let b = Buffer.from(e, 'utf8');
+        //     parseBuffer(b);
+        // })
         return;
     }
     //驗證
     if (authenticate(s, data.type) == false) {
         console.log("此連線被中斷");
-        console.table(s)
+        console.table(s.id, socket.id)
         return;
     }
-
     switch (data.type) {
         case Session.protocolType.authentication:
             /**
              * @type {protocolAuthenticate}
              */
-            let reqAuth = JSON.parse(Buffer.from(data.buf).toString("utf8"))
+            let reqAuth = JSON.parse(Buffer.from(data.buf, 'base64').toString("utf8"))
+            logger(s.id, data.type, reqAuth);
             let playerP = playerCenter.authenticate(reqAuth.account, reqAuth.password);
             playerP.then(player => {
-                //重複登入
-                let oldS = getSessionByPid(player.aid);
-                oldS && oldS.socket.destroy();
-                //登入
-                s.pid = player.aid;
+                if (player != null) {
+                    //重複登入
+                    let oldS = getSessionByPid(player.id);
+                    oldS && oldS.socket.destroy();
+                    //登入
+                    s.pid = player.id;
+                }
                 s.sendRespond(reqAuth.id, player);
             })
             break;
@@ -65,11 +72,10 @@ function parseBuffer(socket, buf) {
             /**
              * @type {prototcolRequest}
              */
-            let reqData = JSON.parse(Buffer.from(data.buf).toString("utf8"))
-
+            let reqData = JSON.parse(Buffer.from(data.buf, 'base64').toString("utf8"))
             let server = serversRPC[reqData.server];
             if (server == null) {
-                console.log("server is null: " + reqData.server)
+                console.log("server is null: " + reqData.server + "." + reqData.method)
                 return;
             }
             /**
@@ -77,12 +83,15 @@ function parseBuffer(socket, buf) {
              */
             let method = server[reqData.method];
             if (method == null) {
-                console.log("method is null: " + reqData.method)
+                console.log("method is null: " + reqData.server + "." + reqData.method)
                 return;
             }
+            if (reqData.args == null) reqData.args = [];
+            logger(s.id, data.type, reqData);
             reqData.args.unshift(s)
             let result = method(...reqData.args);
             if (reqData.id != 0) {
+                console.log("回傳:" + JSON.stringify(result))
                 s.sendRespond(reqData.id, result);
             }
             break;
@@ -90,24 +99,30 @@ function parseBuffer(socket, buf) {
             /**
              * @type {prototcolRespond}
              */
-            let resData = JSON.parse(Buffer.from(data.buf).toString("utf8"))
+            let resData = JSON.parse(Buffer.from(data.buf, 'base64').toString("utf8"))
+            logger(s.id, data.type, reqAuth);
             if (resData.id != 0) {
                 let func = s.rpcCallBack[resData.id]
                 func && func(resData.data);
             }
             break;
-        case Session.protocolType.listen:
+        case Session.protocolType.listenClass:
             /**
              * @type {prototcolListen}
              */
-            let lisData = JSON.parse(Buffer.from(data.buf).toString("utf8"));
+            let lisData = JSON.parse(Buffer.from(data.buf, 'base64').toString("utf8"));
             if (lisData.add) {
                 listenCenter.addListen(lisData.className, lisData.classId, s.id)
             }
             else {
-                listenCenter.addListen(lisData.className, lisData.classId, s.id)
+                listenCenter.removeListen(lisData.className, lisData.classId, s.id)
             }
-            if (lisData.idid != 0) s.sendRespond(id);
+            logger(s.id, data.type, lisData);
+            if (lisData.id != 0) s.sendRespond(lisData.id);
+            break;
+        case Session.protocolType.listenMethod:
+            break;
+        case Session.protocolType.methodReturn:
             break;
         case Session.protocolType.heartBeat:
             s.sendHeartBeat();
@@ -140,14 +155,6 @@ function genSession(socket) {
     socket.id = s.id;
     allSession[s.id] = s;
     return s;
-}
-
-/**
- * 移除Session
- * @param {Socket} socket 
- */
-function removeSession(socket) {
-    delete allSession[socket.id];
 }
 
 /**
@@ -201,11 +208,19 @@ function onClose(socket) {
     })
 }
 
+function logger(sId, type, data) {
+    if (type != Session.protocolType.heartBeat) {
+        let str = sId + ":RPC接受---" + Object.keys(Session.protocolType).find(e => Session.protocolType[e] == type);
+        str += " :: data : " + JSON.stringify(data);
+        console.log(str)
+    }
+}
+
 module.exports.init = init;
 module.exports.parseBuffer = parseBuffer;
 module.exports.getSessionById = getSessionById;
+module.exports.getSessionByPid = getSessionByPid;
 module.exports.genSession = genSession;
-module.exports.removeSession = removeSession;
 module.exports.onClose = onClose;
 
 /**

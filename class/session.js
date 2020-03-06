@@ -21,13 +21,21 @@ module.exports = class Session {
              */
             respond: 3,
             /**
-             * 註冊或註銷監聽
+             * 註冊或註銷監聽class
              */
-            listen: 4,
+            listenClass: 4,
             /**
              * 同步Class
              */
-            sync: 5,
+            syncClass: 5,
+            /**
+             * 註冊或註銷監聽方法
+             */
+            listenMethod :6,
+            /**
+             * 方法執行後回傳
+             */
+            methodReturn:7
         };
     }
     /**
@@ -63,7 +71,7 @@ module.exports = class Session {
      * @param {string} server 服務名
      * @param {string} method 方法名
      * @param {[]} args 摻數
-     * @param {boolean} waitRespond 是否等待回傳
+     * @param {boolean} waitRespond 是否等待回傳(預設不等)
      * @returns {void|Promise}
      */
     sendReqest(server, method, args, waitRespond = false) {
@@ -80,9 +88,10 @@ module.exports = class Session {
         let jsonStr = JSON.stringify(data)
         let buf = Buffer.from(jsonStr, 'utf8');
 
-        let req = { type: Session.protocolType.request, buf }
+        let req = { type: Session.protocolType.request, buf: [...buf] }
         let reqJson = JSON.stringify(req);
         let reqBuf = Buffer.from(reqJson, 'utf8');
+        this.logger(req.type, data);
         this.socketWrite(reqBuf)
         return p;
     }
@@ -97,9 +106,10 @@ module.exports = class Session {
         let jsonStr = JSON.stringify(data);
         let buf = Buffer.from(jsonStr, "utf8");
 
-        let res = { type: Session.protocolType.respond, buf }
+        let res = { type: Session.protocolType.respond, buf: [...buf] }
         let resStr = JSON.stringify(res);
         let resBuf = Buffer.from(resStr, "utf8");
+        this.logger(res.type, data);
         this.socketWrite(resBuf)
     }
 
@@ -108,6 +118,23 @@ module.exports = class Session {
         let hbStr = JSON.stringify(hb);
         let hbBuf = Buffer.from(hbStr, "utf8");
         this.socketWrite(hbBuf)
+    }
+
+    /**
+     * 傳送同步資料
+     * @param {string} className 
+     * @param {*} data 
+     */
+    sendSyncClass(className, data) {
+        let sc = { className, data }
+        let scStr = JSON.stringify(sc);
+        let scBuf = Buffer.from(scStr, "utf8");
+
+        let syncP = { type: Session.protocolType.syncClass, buf: [...scBuf] }
+        let dataStr = JSON.stringify(syncP);
+        let dataBuf = Buffer.from(dataStr, "utf8");
+        this.logger(syncP.type, sc);
+        this.socketWrite(dataBuf)
     }
 
     /**
@@ -123,19 +150,16 @@ module.exports = class Session {
         }
     }
 
-    /**
-     * 傳送同步資料
-     * @param {string} className 
-     * @param {number} classId 
-     * @param {*} data 
-     */
-    sendSyncClass(className, classId, data) {
-        let sc = { type: Session.protocolType.sync, className, classId, data }
-        let scStr = JSON.stringify(sc);
-        let scBuf = Buffer.from(scStr, "utf8");
-        this.socketWrite(scBuf);
+    logger(type, data) {
+        if (type != Session.protocolType.heartBeat) {
+            let str = this.id + ":RPC發出---" + Object.keys(Session.protocolType).find(e => Session.protocolType[e] == type);
+            str += " :: data : " + JSON.stringify(data);
+            console.log(str)
+        }
     }
 }
+
+
 
 /**
  * @typedef {import("net").Socket} Socket
