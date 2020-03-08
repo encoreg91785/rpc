@@ -1,12 +1,17 @@
 "use strict";
 const lobbyCenter = require('../manager/lobbyCenter');
 const playerCenter = require('../manager/playerCenter');
+const listenCenter = require("../manager/listenCenter");
 
 function init() {
     return new Promise((resolve, reject) => {
         console.log("sever初始化");
         resolve()
     })
+}
+
+function testt() {
+    lobbyCenter.creatRoom("測試1號", 4)
 }
 
 /**
@@ -64,6 +69,15 @@ function onClose(s) {
     let p = playerCenter.getOnlinePlayer(s.pid)
     if (p != null) playerCenter.removePlayer(p.aid);
 }
+/**
+ * 進入房間
+ * @param {Session} session 
+ */
+function test(session){
+    let p = playerCenter.getOnlinePlayer(session.pid);
+    p.name = "QQQQ";
+    listenCenter.triggerByClass(p);
+}
 
 module.exports.onClose = onClose;
 module.exports.init = init;
@@ -71,6 +85,7 @@ module.exports.rpc = {
     inLobby,
     getRoomById,
     joinRoom,
+    createRoom,
     test
 }
 

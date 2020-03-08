@@ -10,7 +10,7 @@ const defineTables = {
             name: { type: Sequelize.STRING(50), unique: true, allowNull: false },
             level: { type: Sequelize.INTEGER, defaultValue: 1 },
             exp: { type: Sequelize.INTEGER, defaultValue: 0 },
-            gender: { type: Sequelize.SMALLINT, allowNull: true },
+            gender: { type: Sequelize.SMALLINT, allowNull: true ,defaultValue:-1},
             photo: { type: Sequelize.STRING(50) },
             createAt: { type: Sequelize.DATE },
             lastLogin: { type: Sequelize.DATE },

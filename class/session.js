@@ -31,11 +31,11 @@ module.exports = class Session {
             /**
              * 註冊或註銷監聽方法
              */
-            listenMethod :6,
+            listenMethod: 6,
             /**
              * 方法執行後回傳
              */
-            methodReturn:7
+            methodReturn: 7
         };
     }
     /**
@@ -118,6 +118,17 @@ module.exports = class Session {
         let hbStr = JSON.stringify(hb);
         let hbBuf = Buffer.from(hbStr, "utf8");
         this.socketWrite(hbBuf)
+    }
+
+    sendMethodReturn(server, method, data) {
+        let p = { server, method, data }
+        let jsonStr = JSON.stringify(p);
+        let buf = Buffer.from(jsonStr, "utf8");
+        let mR = { type: Session.protocolType.methodReturn, buf: [...buf] }
+        let mRStr = JSON.stringify(mR);
+        let mRBuf = Buffer.from(mRStr, "utf8");
+        this.logger(mR.type, p);
+        this.socketWrite(mRBuf)
     }
 
     /**

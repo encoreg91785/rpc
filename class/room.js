@@ -1,5 +1,5 @@
 "use strict";
-var id;
+var id = 0;
 module.exports = class Room {
     static get status() {
         return {
@@ -53,5 +53,13 @@ module.exports = class Room {
          * 玩家人數上限
          */
         this.max = max;
+        //不被parse成JSON
+        Object.defineProperty(this, "password", {
+            enumerable: false
+        });
+        Object.defineProperty(this, "isLock", {
+            get: function () { return password != ""; },
+            enumerable: true
+        });
     }
 }

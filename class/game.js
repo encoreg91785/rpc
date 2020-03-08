@@ -1,5 +1,5 @@
 "use strict";
-var id;
+var id = 0;
 module.exports = class Game {
     static get status() {
         return {

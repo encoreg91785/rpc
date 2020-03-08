@@ -9,6 +9,12 @@ const inLobbyPlayerId = {};
  */
 const allRoom = {};
 
+function init() {
+    return new Promise(reslove => {
+        reslove();
+    })
+}
+
 /**
  * 創房間
  * @param {string} roomName 房間名
@@ -67,4 +73,5 @@ module.exports.getRoomById = getRoomById;
 module.exports.creatRoom = creatRoom;
 module.exports.inLobby = inLobby;
 module.exports.leaveLobby = leaveLobby;
+module.exports.init = init;
 

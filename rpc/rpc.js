@@ -8,6 +8,10 @@ const playerCenter = require('../manager/playerCenter');
 const listenCenter = require('../manager/listenCenter');
 var serversRPC = {};
 /**
+ * @type {Object<string,number[]>}
+ */
+const listenMethodList = {};
+/**
  * 所有Session
  * @type {Object<string,Session>}
  */
@@ -70,7 +74,7 @@ function parseBuffer(socket, buf) {
             break;
         case Session.protocolType.request:
             /**
-             * @type {prototcolRequest}
+             * @type {protocolRequest}
              */
             let reqData = JSON.parse(Buffer.from(data.buf, 'base64').toString("utf8"))
             let server = serversRPC[reqData.server];
@@ -91,13 +95,27 @@ function parseBuffer(socket, buf) {
             reqData.args.unshift(s)
             let result = method(...reqData.args);
             if (reqData.id != 0) {
-                console.log("回傳:" + JSON.stringify(result))
                 s.sendRespond(reqData.id, result);
             }
+            let delSidList =[]
+            let sls = listenMethodList[reqData.server+"."+reqData.method]||[];
+            //監聽方法回傳
+            for (let index = 0; index < sls.length; index++) {
+                let id = sls[index];
+                let ss = getSessionById(id);
+                if(ss!=null)ss.sendMethodReturn(reqData.server,reqData.method,result);
+                else delSidList.push(id);
+            }
+            //移除不存在Session ID
+            for (let index = 0; index < delSidList.length; index++) {
+                let id = delSidList[index];
+                utility.removeElement(sls,id);
+            }
+
             break;
         case Session.protocolType.respond:
             /**
-             * @type {prototcolRespond}
+             * @type {protocolRespond}
              */
             let resData = JSON.parse(Buffer.from(data.buf, 'base64').toString("utf8"))
             logger(s.id, data.type, reqAuth);
@@ -108,7 +126,7 @@ function parseBuffer(socket, buf) {
             break;
         case Session.protocolType.listenClass:
             /**
-             * @type {prototcolListen}
+             * @type {protocolListenClass}
              */
             let lisData = JSON.parse(Buffer.from(data.buf, 'base64').toString("utf8"));
             if (lisData.add) {
@@ -121,8 +139,20 @@ function parseBuffer(socket, buf) {
             if (lisData.id != 0) s.sendRespond(lisData.id);
             break;
         case Session.protocolType.listenMethod:
-            break;
-        case Session.protocolType.methodReturn:
+            /**
+             * @type {protocolListenMethod}
+             */
+            let lisMethod = JSON.parse(Buffer.from(data.buf, 'base64').toString("utf8"));
+            let methodKey = lisMethod.server+"."+lisMethod.method;
+            if(lisMethod.add){
+                if(listenMethodList[methodKey] ==null) listenMethodList[methodKey] = [];
+                listenMethodList[methodKey].push(s.id);
+            }
+            else{
+                if(listenMethodList[methodKey] !=null)utility.removeElement(listenMethodList[methodKey],s.id);
+            }
+            logger(s.id, data.type, lisMethod);
+            if (lisMethod.id != 0) s.sendRespond(lisMethod.id);
             break;
         case Session.protocolType.heartBeat:
             s.sendHeartBeat();
@@ -234,7 +264,7 @@ module.exports.onClose = onClose;
  */
 
 /**
- * @typedef prototcolRequest
+ * @typedef protocolRequest
  * @property {number} id
  * @property {string} server
  * @property {string} method
@@ -242,13 +272,13 @@ module.exports.onClose = onClose;
  */
 
 /**
-* @typedef prototcolRespond
+* @typedef protocolRespond
 * @property {number} id
 * @property {*} data
 */
 
 /**
-* @typedef prototcolListen
+* @typedef protocolListenClass
 * @property {number} id
 * @property {number} classId
 * @property {string} className
@@ -260,4 +290,12 @@ module.exports.onClose = onClose;
  * @property {number} id
  * @property {string} account
  * @property {string} password
+ */
+
+ /**
+ * @typedef protocolListenMethod
+ * @property {number} id
+ * @property {string} server
+ * @property {string} method
+ * @property {boolean} add
  */
