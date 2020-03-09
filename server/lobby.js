@@ -2,6 +2,9 @@
 const lobbyCenter = require('../manager/lobbyCenter');
 const playerCenter = require('../manager/playerCenter');
 const listenCenter = require("../manager/listenCenter");
+const utility = require('../utility');
+const Player = require("../class/index").Player;
+const Room = require("../class/index").Room;
 
 function init() {
     return new Promise((resolve, reject) => {
@@ -10,18 +13,16 @@ function init() {
     })
 }
 
-function testt() {
-    lobbyCenter.creatRoom("測試1號", 4)
-}
-
 /**
  * 進入大廳
  * @param {Session} session 
+ * @returns 所有房間ID
  */
 function inLobby(session) {
-    let idList = lobbyCenter.getLobbyAllRoomId()
-    lobbyCenter.inLobby(session.pid);
-    return idList;
+    let p = playerCenter.getOnlinePlayer(session.pid);
+    p.status = Player.status.lobby;
+    listenCenter.triggerByClass(p);
+    return lobbyCenter.getLobbyAllRoomId();
 }
 
 /**
@@ -34,30 +35,84 @@ function getRoomById(session, id) {
 }
 
 /**
- * 
  * @param {Session} session 
  * @param {string} roomName
  * @param {number} max
  * @param {string} password 
  */
-function createRoom(session, roomName, max, password) {
+function createAndJoinRoom(session, roomName, max, password) {
     var r = lobbyCenter.creatRoom(roomName, max, password);
+    joinRoom(session, r.id, password);
     return r;
 }
 
 /**
  * 進入房間
  * @param {Session} session 
- * @param {number} id 
+ * @param {number} rid 
  * @param {string} password 
  */
-function joinRoom(session, id, password) {
-    let r = lobbyCenter.getRoomById(id);
-    if (r != null && r.playerList.length < r.max && r.password == password) {
-        r.playerList.push(session.pid);
-        return true;
+function joinRoom(session, rid, password) {
+    let isIn = lobbyCenter.joinRoom(rid, session.pid, password);
+    if (isIn) {
+        let r = lobbyCenter.getRoomById(rid);
+        r.update();
+
+        let p = playerCenter.getOnlinePlayer(session.pid);
+        p.status = Player.status.room;
+        p.update();
     }
-    return false;
+    return isIn;
+}
+
+/**
+ * 進入房間
+ * @param {Session} s 
+ * @param {number} rid 
+ */
+function onReady(s, rid) {
+    let isOn = lobbyCenter.isReady(rid, s.pid)
+    if (isOn) {
+        let r = getRoomById(rid);
+        r.update();
+    }
+    return isOn;
+}
+
+/**
+ * 離開房間
+ * @param {Session} s 
+ * @param {number} rid 
+ */
+function leaveRoom(s, rid) {
+    let isOn = lobbyCenter.leaveRoom(rid, s.pid)
+    if (isOn) {
+        let r = getRoomById(rid);
+        r.update();
+        let p = playerCenter.getOnlinePlayer(session.pid);
+        p.status = Player.status.lobby;
+        p.update();
+    }
+    return isOn;
+}
+
+/**
+ * 離開房間
+ * @param {Session} s 
+ * @param {number} rid 
+ */
+function inGame(s, rid) {
+    let isOn = lobbyCenter.inGame(rid, s.pid)
+    if (isOn) {
+        let r = getRoomById(rid);
+        r.update();
+        r.playerList.forEach(pid => {
+            let p = playerCenter.getOnlinePlayer(pid);
+            p.status = Player.status.game;
+            p.update();
+        })
+    }
+    return isOn;
 }
 
 /**
@@ -65,18 +120,25 @@ function joinRoom(session, id, password) {
  * @param {Session} s
  */
 function onClose(s) {
-    lobbyCenter.leaveLobby(s.pid);
-    let p = playerCenter.getOnlinePlayer(s.pid)
-    if (p != null) playerCenter.removePlayer(p.aid);
+    let p = playerCenter.getOnlinePlayer(s.pid);
+    let ids = lobbyCenter.getLobbyAllRoomId();
+    for (let index = 0; index < ids.length; index++) {
+        let rid = ids[index];
+        let r = lobbyCenter.getRoomById(rid);
+        if (r.status == Room.status.ready && r.playerList.includes(s.pid)) {
+            utility.removeElement(r.playerList, s.pid);
+            break;
+        }
+    }
+    if (p != null) {
+        playerCenter.removePlayer(p.id);
+    }
 }
-/**
- * 進入房間
- * @param {Session} session 
- */
-function test(session){
-    let p = playerCenter.getOnlinePlayer(session.pid);
-    p.name = "QQQQ";
-    listenCenter.triggerByClass(p);
+
+
+function endGameTest(s, rid) {
+    let isOn = lobbyCenter.leaveGame(rid)
+    return isOn;
 }
 
 module.exports.onClose = onClose;
@@ -84,9 +146,12 @@ module.exports.init = init;
 module.exports.rpc = {
     inLobby,
     getRoomById,
+    createAndJoinRoom,
     joinRoom,
-    createRoom,
-    test
+    leaveRoom,
+    onReady,
+    inGame,
+    endGameTest
 }
 
 /**

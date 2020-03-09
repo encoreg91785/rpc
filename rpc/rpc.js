@@ -40,11 +40,6 @@ function parseBuffer(socket, buf) {
     catch (e) {
         console.log("data 解析失敗: " + buf)
         console.log("data 解析失敗: " + buf.toString("utf8"))
-        // let ls =splitJsonString(buf.toString("utf8"))
-        // ls.forEach(e=>{
-        //     let b = Buffer.from(e, 'utf8');
-        //     parseBuffer(b);
-        // })
         return;
     }
     //驗證
@@ -85,7 +80,7 @@ function parseBuffer(socket, buf) {
             /**
              * @type {function(...args)}
              */
-            let method = server[reqData.method];
+            let method = server['rpc'][reqData.method];
             if (method == null) {
                 console.log("method is null: " + reqData.server + "." + reqData.method)
                 return;
@@ -220,7 +215,7 @@ function initAllServerRPC() {
              */
             let p = method[key]['init']();
             lsP.push(p);
-            serversRPC[key] = method[key]['rpc'];
+            serversRPC[key] = method[key];
         }
     });
     return Promise.all(lsP);

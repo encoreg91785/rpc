@@ -1,5 +1,6 @@
 "use strict";
-module.exports = class Player {
+const SyncClass = require("./syncClass");
+module.exports = class Player extends SyncClass {
     //设定玩家状态
     static get status() {
         return {
@@ -32,6 +33,7 @@ module.exports = class Player {
      * @param {string} data.photo
      */
     constructor(data) {
+        super();
         /**
          * 玩家編號
          */

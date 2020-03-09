@@ -1,6 +1,7 @@
 "use strict";
+const SyncClass = require("./syncClass");
 var id = 0;
-module.exports = class Room {
+module.exports = class Room extends SyncClass {
     static get status() {
         return {
             /**
@@ -23,6 +24,7 @@ module.exports = class Room {
      * @param {string} password 密碼 ""
      */
     constructor(roomName, max, password = "") {
+        super();
         id++;
         /**
          * 房間編號

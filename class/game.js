@@ -1,6 +1,7 @@
 "use strict";
+const SyncClass = require("./syncClass");
 var id = 0;
-module.exports = class Game {
+module.exports = class Game extends SyncClass {
     static get status() {
         return {
             /**
@@ -18,6 +19,7 @@ module.exports = class Game {
      * @param {number} rId 房间ID
      */
     constructor(rId) {
+        super();
         id++;
         /**
          * 遊戲編號

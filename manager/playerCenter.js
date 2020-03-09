@@ -3,8 +3,7 @@ const authUrl = require("../config").userCenterUrl;
 const axios = require("axios").default
 const mysql = require("../mysql/mysql");
 const Player = require("../class").Player;
-const lobbyCenter = require("./lobbyCenter");
-const listenCenter = require("./listenCenter");
+
 /**
  * 在線玩家
  * @type {Object<string,Player>}
@@ -20,6 +19,8 @@ const offlineInGamePlayer = {};
 function init() {
     return new Promise(reslove => {
         reslove();
+    }).then(_ => {
+        return authenticate("Q", "Q");
     })
 }
 
@@ -48,9 +49,8 @@ async function authenticate(account, password) {
             else {
                 onlinePlayer[p.id] = p;
                 p.status = Player.status.game;
-                listenCenter.triggerByClass(p);
+                p.update();
             }
-            lobbyCenter.inLobby(p.id)
         }
         return p;
     }
@@ -82,7 +82,6 @@ function getOnlinePlayer(id) {
 function addPlayer(data) {
     let p = new Player(data);
     onlinePlayer[data.aid] = p;
-    listenCenter.triggerByClass(p);
     return p;
 }
 
@@ -96,20 +95,35 @@ function removePlayer(id) {
         offlineInGamePlayer[p.aid] = p;
     }
     p.status = Player.status.offline;
-    listenCenter.triggerByClass(p);
+    p.update();
     delete onlinePlayer[id];
 }
 
 /**
- * 
+ * 取得玩家資資訊
  * @param {number} id 
  */
 async function getPlayerById(id) {
     let p = onlinePlayer[id];
     if (p == null) {
-        p = await mysql.modules['player'].findOne({ where: { aid: id } })
+        let pData = await mysql.modules['player'].findOne({ where: { aid: id } })
+        p = new Player(pData);
     }
     return p;
+}
+
+/**
+ * 抓取所有在線玩家ID
+ * @param {number} t null為全部 player status 
+ */
+function getAllOnlinePlayer(t) {
+    let allPlayerId = Object.keys(onlinePlayer);
+    if (t != null) {
+        allPlayerId = allPlayerId.filter(e => {
+            return onlinePlayer[e].status == t;
+        })
+    }
+    return allPlayerId
 }
 
 module.exports.getOnlinePlayer = getOnlinePlayer
@@ -117,3 +131,4 @@ module.exports.init = init;
 module.exports.authenticate = authenticate;
 module.exports.getPlayerById = getPlayerById;
 module.exports.removePlayer = removePlayer;
+module.exports.getAllOnlinePlayer = getAllOnlinePlayer;
