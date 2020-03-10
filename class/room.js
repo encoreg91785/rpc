@@ -17,6 +17,10 @@ module.exports = class Room extends SyncClass {
     static get maxPlayer() {
         return 4;
     }
+
+    static get minPlayer() {
+        return 2;
+    }
     /**
      * 
      * @param {string} roomName 房間名

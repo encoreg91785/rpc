@@ -79,6 +79,7 @@ function triggerByObject(className, classId, data) {
         let id = ls[index];
         let s = rpc.getSessionById(id);
         if (s == null) nullLs.push(id);
+        
         s && s.sendSyncClass(className, data);
     }
     //移除不存在的Session ID
@@ -93,7 +94,7 @@ function triggerByObject(className, classId, data) {
  * @param {*} classData 
  */
 function triggerByClass(classData) {
-    let className = "RPCClass." + classData.constructor.name;
+    let className =classData.constructor.name;
     let classId = classData.id;
     if (className == "Object" || classId == null) {
         console.log("className is error : " + className + "| classId is error: " + classId);

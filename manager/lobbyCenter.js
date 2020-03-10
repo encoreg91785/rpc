@@ -1,5 +1,5 @@
 "use strict";
-const Room = require('../class').Room
+const Room = require('../class/room');
 const utility = require('../utility');
 
 /**
@@ -20,7 +20,7 @@ function init() {
  * @param {string} password 密碼
  */
 function creatRoom(roomName, max, password = "") {
-    max = max > 4 ? 4 : (max < 2 ? 2 : max);
+    max = max > Room.maxPlayer ? Room.maxPlayer : (max < Room.minPlayer ? Room.minPlayer : max);
     let r = new Room(roomName, max, password)
     allRoom[r.id] = r;
     return r;
@@ -35,9 +35,8 @@ function creatRoom(roomName, max, password = "") {
 function joinRoom(roomId, pid, password = "") {
     let r = getRoomById(roomId);
     if (r != null && r.status == Room.status.ready && //不為Null 狀態為準備中
-        r.playerList < r.max && r.password == password && //檢查人數/密碼
-        r.playerList.includes(pid) == false) { //是否重複進入
-        r.playerList.push(pid);
+        r.playerList.length < r.max && r.password == password) {//檢查人數/密碼
+        if( r.playerList.includes(pid) == false) r.playerList.push(pid); //是否重複進入
         return true;
     }
     else return false;
@@ -53,6 +52,9 @@ function leaveRoom(roomId, pid) {
     if (r != null && r.status == Room.status.ready) {
         utility.removeElement(r.playerList, pid);
         utility.removeElement(r.isReadyList, pid);
+        if (r.playerList.length == 0) {
+            deleteRoom(roomId);
+        }
     }
 }
 
@@ -76,14 +78,12 @@ function isReady(roomId, pid) {
 /**
  * 
  * @param {number} roomId 
- * @param {number} hostId 
  */
-function inGame(roomId, hostId) {
+function inGame(roomId) {
     let r = getRoomById(roomId);
     if (r != null && r.status == Room.status.ready && //檢查是否為Null 狀態是否是準備中
-        r.playerList.length >= Room.maxPlayer && //檢查玩家人數是否大於等於最小人數
-        r.isReadyList.length == r.playerList.length && //是否全部人都已準備
-        hostId == r.playerList[0]) {//判斷是否點開始的是防主(第一個進入的是防主)
+        r.playerList.length <= r.max && //檢查玩家人數是否大於等於最小人數
+        r.isReadyList.length == r.playerList.length) { //是否全部人都已準備
         r.status = Room.status.game;
         return true;
     }
@@ -97,6 +97,14 @@ function leaveGame(roomId) {
         return true;
     }
     else return false;
+}
+
+
+function deleteRoom(roomId) {
+    let r = getRoomById(roomId);
+    if (r != null && r.status == Room.status.ready){
+        delete allRoom[roomId];
+    }
 }
 
 /**
@@ -122,6 +130,8 @@ module.exports.creatRoom = creatRoom;
 module.exports.joinRoom = joinRoom;
 module.exports.isReady = isReady;
 module.exports.leaveRoom = leaveRoom;
+module.exports.deleteRoom = deleteRoom;
+
 module.exports.startGame = inGame;
 module.exports.leaveGame = leaveGame;
 

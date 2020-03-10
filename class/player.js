@@ -37,7 +37,7 @@ module.exports = class Player extends SyncClass {
         /**
          * 玩家編號
          */
-        this.id = data.aid;
+        this.id = data.aid || data.id;
         /**
          * 玩家名稱
          */

@@ -2,7 +2,7 @@
  * Socket內有id這個值
  */
 "use strict";
-const Session = require('../class').Session
+const Session = require('../class/session');
 const utility = require('../utility');
 const playerCenter = require('../manager/playerCenter');
 const listenCenter = require('../manager/listenCenter');
@@ -60,7 +60,10 @@ function parseBuffer(socket, buf) {
                 if (player != null) {
                     //重複登入
                     let oldS = getSessionByPid(player.id);
-                    oldS && oldS.socket.destroy();
+                    if(oldS != null) {
+                        oldS.pid = 0;
+                        oldS.socket.destroy();
+                    }
                     //登入
                     s.pid = player.id;
                 }

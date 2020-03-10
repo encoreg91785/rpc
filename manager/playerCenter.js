@@ -2,7 +2,7 @@
 const authUrl = require("../config").userCenterUrl;
 const axios = require("axios").default
 const mysql = require("../mysql/mysql");
-const Player = require("../class").Player;
+const Player = require("../class/player");
 
 /**
  * 在線玩家
@@ -126,7 +126,7 @@ function getAllOnlinePlayer(t) {
     return allPlayerId
 }
 
-module.exports.getOnlinePlayer = getOnlinePlayer
+module.exports.getOnlinePlayer = getOnlinePlayer;
 module.exports.init = init;
 module.exports.authenticate = authenticate;
 module.exports.getPlayerById = getPlayerById;

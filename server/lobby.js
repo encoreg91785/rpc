@@ -2,9 +2,8 @@
 const lobbyCenter = require('../manager/lobbyCenter');
 const playerCenter = require('../manager/playerCenter');
 const listenCenter = require("../manager/listenCenter");
-const utility = require('../utility');
-const Player = require("../class/index").Player;
-const Room = require("../class/index").Room;
+const Player = require("../class/player");
+const Room = require("../class/room");
 
 function init() {
     return new Promise((resolve, reject) => {
@@ -73,7 +72,7 @@ function joinRoom(session, rid, password) {
 function onReady(s, rid) {
     let isOn = lobbyCenter.isReady(rid, s.pid)
     if (isOn) {
-        let r = getRoomById(rid);
+        let r = lobbyCenter.getRoomById(rid);
         r.update();
     }
     return isOn;
@@ -92,19 +91,20 @@ function leaveRoom(s, rid) {
         let p = playerCenter.getOnlinePlayer(session.pid);
         p.status = Player.status.lobby;
         p.update();
+        if (r.playerList.length == 0) lobbyCenter.deleteRoom(rid);
     }
     return isOn;
 }
 
 /**
- * 離開房間
+ * 房間開始遊戲
  * @param {Session} s 
  * @param {number} rid 
  */
 function inGame(s, rid) {
-    let isOn = lobbyCenter.inGame(rid, s.pid)
+    let isOn = lobbyCenter.startGame(rid, s.pid)
     if (isOn) {
-        let r = getRoomById(rid);
+        let r = lobbyCenter.getRoomById(rid);
         r.update();
         r.playerList.forEach(pid => {
             let p = playerCenter.getOnlinePlayer(pid);
@@ -126,7 +126,7 @@ function onClose(s) {
         let rid = ids[index];
         let r = lobbyCenter.getRoomById(rid);
         if (r.status == Room.status.ready && r.playerList.includes(s.pid)) {
-            utility.removeElement(r.playerList, s.pid);
+            leaveRoom(s, r.id);
             break;
         }
     }
