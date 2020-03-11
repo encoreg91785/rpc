@@ -65,7 +65,7 @@ function joinRoom(session, rid, password) {
 }
 
 /**
- * 進入房間
+ * 房間內準備完成
  * @param {Session} s 
  * @param {number} rid 
  */
@@ -135,12 +135,6 @@ function onClose(s) {
     }
 }
 
-
-function endGameTest(s, rid) {
-    let isOn = lobbyCenter.leaveGame(rid)
-    return isOn;
-}
-
 module.exports.onClose = onClose;
 module.exports.init = init;
 module.exports.rpc = {
@@ -151,7 +145,6 @@ module.exports.rpc = {
     leaveRoom,
     onReady,
     inGame,
-    endGameTest
 }
 
 /**
