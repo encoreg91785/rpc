@@ -1,3 +1,4 @@
+app.js 為程式入口
 # rpc
 初始化流程 mysql -> manager -> rpc -> socketServer -> httpServer
 # 結構
